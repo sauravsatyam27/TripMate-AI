@@ -1,0 +1,149 @@
+# =========================================================
+# TripMate AI - Git Ignore
+# =========================================================
+
+# -------------------------
+# Environment / Secrets
+# -------------------------
+.env
+.env.*
+!.env.example
+
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Python cache / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# -------------------------
+# Virtual Environment
+# -------------------------
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# -------------------------
+# FastAPI / Uvicorn
+# -------------------------
+*.log
+uvicorn.log
+
+# -------------------------
+# Jupyter Notebook
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# Node.js / React / Vite
+# -------------------------
+node_modules/
+frontend/node_modules/
+
+# Vite build output
+dist/
+frontend/dist/
+
+# Vite cache
+.vite/
+frontend/.vite/
+
+# -------------------------
+# React / Frontend
+# -------------------------
+*.local
+
+# -------------------------
+# Testing
+# -------------------------
+coverage/
+.nyc_output/
+
+# -------------------------
+# IDE / Editors
+# -------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# VS Code settings
+*.code-workspace
+
+# -------------------------
+# Operating System
+# -------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# -------------------------
+# Windows
+# -------------------------
+ehthumbs.db
+
+# -------------------------
+# Database / Local DB Files
+# -------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# -------------------------
+# Temporary Files
+# -------------------------
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# -------------------------
+# Python distribution
+# -------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# -------------------------
+# Package manager
+# -------------------------
+pip-wheel-metadata/
+
+# -------------------------
+# Generated files
+# -------------------------
+generated/
+outputs/
+temp/
+tmp/
+
+# -------------------------
+# Secrets / Credentials
+# -------------------------
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# -------------------------
+# OS / Editor backup files
+# -------------------------
+*~
+.#*
