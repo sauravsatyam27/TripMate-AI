@@ -14,7 +14,7 @@ nest_asyncio.apply()
 
 
 # =========================================================
-# FASTAPI APP
+# FASTAPI
 # =========================================================
 
 app = FastAPI(
@@ -30,22 +30,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-
     allow_origins=[
-        # Main Vercel production URL
         "https://trip-mate-ai-woad.vercel.app",
-
-        # Vercel deployment URL
         "https://trip-mate-ai-git-main-sauravsatyam27s-projects.vercel.app",
-
-        # Local frontend
         "http://localhost:5173",
     ],
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
 )
 
@@ -60,12 +51,11 @@ class TravelRequest(BaseModel):
 
 
 # =========================================================
-# HEALTH CHECK
+# HEALTH
 # =========================================================
 
 @app.get("/health")
-async def health_check():
-
+def health_check():
     return {
         "status": "ok",
         "message": "AI Travel Planner API is running"
@@ -79,20 +69,18 @@ async def health_check():
 @app.post("/api/travel")
 def travel_planner(request_data: TravelRequest):
 
-    try:
+    print("\n" + "=" * 70)
+    print("TRIPMATE REQUEST START")
+    print("=" * 70)
 
-        # -------------------------------------------------
-        # Get user message
-        # -------------------------------------------------
+    try:
 
         user_message = request_data.message.strip()
 
-        # -------------------------------------------------
-        # Validate message
-        # -------------------------------------------------
+        print("MESSAGE:", user_message)
+        print("THREAD:", request_data.thread_id)
 
         if not user_message:
-
             return JSONResponse(
                 status_code=400,
                 content={
@@ -101,94 +89,64 @@ def travel_planner(request_data: TravelRequest):
                 }
             )
 
-        # -------------------------------------------------
-        # Logs
-        # -------------------------------------------------
+        print("\nStarting run_travel_agent()...")
 
-        print("\n" + "=" * 70)
-        print("TRIPMATE AI - TRAVEL REQUEST")
-        print("=" * 70)
-
-        print("Message:", user_message)
-        print("Thread ID:", request_data.thread_id)
-
-        # -------------------------------------------------
-        # Run LangGraph Travel Agent
-        # -------------------------------------------------
+        # =====================================================
+        # RUN AGENT
+        # =====================================================
 
         result = run_travel_agent(
             user_input=user_message,
             thread_id=request_data.thread_id
         )
 
-        # -------------------------------------------------
-        # Success Response
-        # -------------------------------------------------
+        print("\nrun_travel_agent() completed successfully.")
+
+        print("RESULT TYPE:", type(result))
+
+        # =====================================================
+        # RESPONSE
+        # =====================================================
+
+        response_data = {
+            "success": True,
+            "thread_id": result.get("thread_id"),
+            "answer": result.get("answer", ""),
+            "flight_results": result.get("flight_results", ""),
+            "hotel_results": result.get("hotel_results", ""),
+            "weather_results": result.get("weather_results", ""),
+            "itinerary": result.get("itinerary", ""),
+            "llm_calls": result.get("llm_calls", 0)
+        }
+
+        print("Sending successful response.")
 
         return JSONResponse(
             status_code=200,
-            content={
-                "success": True,
-
-                "thread_id": result.get(
-                    "thread_id"
-                ),
-
-                "answer": result.get(
-                    "answer",
-                    ""
-                ),
-
-                "flight_results": result.get(
-                    "flight_results",
-                    ""
-                ),
-
-                "hotel_results": result.get(
-                    "hotel_results",
-                    ""
-                ),
-
-                "weather_results": result.get(
-                    "weather_results",
-                    ""
-                ),
-
-                "itinerary": result.get(
-                    "itinerary",
-                    ""
-                ),
-
-                "llm_calls": result.get(
-                    "llm_calls",
-                    0
-                )
-            }
+            content=response_data
         )
 
     except Exception as e:
 
-        # -------------------------------------------------
-        # Error Logs
-        # -------------------------------------------------
-
         print("\n" + "=" * 70)
-        print("TRIPMATE AI - TRAVEL API ERROR")
+        print("TRIPMATE BACKEND ERROR")
         print("=" * 70)
 
+        print("ERROR TYPE:", type(e).__name__)
         print("ERROR:", str(e))
 
         traceback.print_exc()
 
-        # -------------------------------------------------
-        # Error Response
-        # -------------------------------------------------
+        print("=" * 70)
 
+        # TEMPORARY DEBUG RESPONSE
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "error": str(e)
+                "error_type": type(e).__name__,
+                "error": str(e),
+                "traceback": traceback.format_exc()
             }
         )
 
@@ -198,15 +156,12 @@ def travel_planner(request_data: TravelRequest):
 # =========================================================
 
 @app.get("/favicon.ico")
-async def favicon():
-
-    return JSONResponse(
-        content={}
-    )
+def favicon():
+    return JSONResponse(content={})
 
 
 # =========================================================
-# LOCAL DEVELOPMENT
+# LOCAL
 # =========================================================
 
 if __name__ == "__main__":
