@@ -14,7 +14,7 @@ nest_asyncio.apply()
 
 
 # =========================================================
-# FASTAPI
+# FASTAPI APP
 # =========================================================
 
 app = FastAPI(
@@ -32,13 +32,13 @@ app.add_middleware(
     CORSMiddleware,
 
     allow_origins=[
-        # Production Vercel frontend
+        # Main Vercel production URL
         "https://trip-mate-ai-woad.vercel.app",
 
         # Vercel deployment URL
         "https://trip-mate-ai-git-main-sauravsatyam27s-projects.vercel.app",
 
-        # Local React/Vite development
+        # Local frontend
         "http://localhost:5173",
     ],
 
@@ -77,17 +77,19 @@ async def health_check():
 # =========================================================
 
 @app.post("/api/travel")
-def travel_planner(
-    request_data: TravelRequest
-):
+def travel_planner(request_data: TravelRequest):
 
     try:
 
+        # -------------------------------------------------
+        # Get user message
+        # -------------------------------------------------
+
         user_message = request_data.message.strip()
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # Validate message
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         if not user_message:
 
@@ -99,33 +101,43 @@ def travel_planner(
                 }
             )
 
-        print("\n" + "=" * 60)
-        print("TRAVEL REQUEST")
-        print("=" * 60)
+        # -------------------------------------------------
+        # Logs
+        # -------------------------------------------------
+
+        print("\n" + "=" * 70)
+        print("TRIPMATE AI - TRAVEL REQUEST")
+        print("=" * 70)
 
         print("Message:", user_message)
         print("Thread ID:", request_data.thread_id)
 
-        # ---------------------------------------------
-        # RUN LANGGRAPH
-        # ---------------------------------------------
+        # -------------------------------------------------
+        # Run LangGraph Travel Agent
+        # -------------------------------------------------
 
         result = run_travel_agent(
             user_input=user_message,
             thread_id=request_data.thread_id
         )
 
-        # ---------------------------------------------
-        # RESPONSE
-        # ---------------------------------------------
+        # -------------------------------------------------
+        # Success Response
+        # -------------------------------------------------
 
         return JSONResponse(
+            status_code=200,
             content={
                 "success": True,
 
-                "thread_id": result["thread_id"],
+                "thread_id": result.get(
+                    "thread_id"
+                ),
 
-                "answer": result["answer"],
+                "answer": result.get(
+                    "answer",
+                    ""
+                ),
 
                 "flight_results": result.get(
                     "flight_results",
@@ -156,13 +168,21 @@ def travel_planner(
 
     except Exception as e:
 
-        print("\n" + "=" * 60)
-        print("TRAVEL API ERROR")
-        print("=" * 60)
+        # -------------------------------------------------
+        # Error Logs
+        # -------------------------------------------------
+
+        print("\n" + "=" * 70)
+        print("TRIPMATE AI - TRAVEL API ERROR")
+        print("=" * 70)
 
         print("ERROR:", str(e))
 
         traceback.print_exc()
+
+        # -------------------------------------------------
+        # Error Response
+        # -------------------------------------------------
 
         return JSONResponse(
             status_code=500,
@@ -186,7 +206,7 @@ async def favicon():
 
 
 # =========================================================
-# RUN LOCAL
+# LOCAL DEVELOPMENT
 # =========================================================
 
 if __name__ == "__main__":
