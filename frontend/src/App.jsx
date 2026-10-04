@@ -8,6 +8,16 @@ import Features from "./components/Features";
 import Planner from "./components/Planner";
 import Result from "./components/Result";
 
+// --------------------------------------------------
+// Production Backend URL
+// --------------------------------------------------
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+// --------------------------------------------------
+// App
+// --------------------------------------------------
+
 function App() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,6 +25,7 @@ function App() {
   const [error, setError] = useState("");
 
   const [answer, setAnswer] = useState("");
+
   const [threadId, setThreadId] = useState(
     () => localStorage.getItem("travel_thread_id") || null
   );
@@ -35,7 +46,7 @@ function App() {
   };
 
   // --------------------------------------------------
-  // Send message
+  // Send message to backend
   // --------------------------------------------------
 
   const sendMessage = async () => {
@@ -48,10 +59,19 @@ function App() {
       return;
     }
 
+    if (!API_URL) {
+      setError(
+        "Backend API URL is not configured. Please check VITE_API_URL."
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch("/api/travel", {
+      console.log("Calling backend:", `${API_URL}/api/travel`);
+
+      const response = await fetch(`${API_URL}/api/travel`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,18 +82,58 @@ function App() {
         }),
       });
 
-      const data = await response.json();
+      // --------------------------------------------------
+      // Read raw response first
+      // This helps debug HTML/text responses
+      // --------------------------------------------------
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Something went wrong.");
+      const rawResponse = await response.text();
+
+      console.log("Backend status:", response.status);
+      console.log("Backend response:", rawResponse);
+
+      let data;
+
+      try {
+        data = JSON.parse(rawResponse);
+      } catch (parseError) {
+        throw new Error(
+          `Backend returned non-JSON response (${response.status}): ${rawResponse.slice(
+            0,
+            300
+          )}`
+        );
       }
 
-      setThreadId(data.thread_id);
-      localStorage.setItem("travel_thread_id", data.thread_id);
+      // --------------------------------------------------
+      // Backend error
+      // --------------------------------------------------
 
-      setAnswer(data.answer);
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error || `Backend request failed (${response.status})`
+        );
+      }
 
+      // --------------------------------------------------
+      // Save thread ID
+      // --------------------------------------------------
+
+      if (data.thread_id) {
+        setThreadId(data.thread_id);
+        localStorage.setItem("travel_thread_id", data.thread_id);
+      }
+
+      // --------------------------------------------------
+      // Set result
+      // --------------------------------------------------
+
+      setAnswer(data.answer || "");
+
+      // --------------------------------------------------
       // Scroll to result
+      // --------------------------------------------------
+
       setTimeout(() => {
         resultSectionRef.current?.scrollIntoView({
           behavior: "smooth",
@@ -81,6 +141,8 @@ function App() {
         });
       }, 100);
     } catch (err) {
+      console.error("Travel API error:", err);
+
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
@@ -127,6 +189,7 @@ function App() {
         setCopied(false);
       }, 1400);
     } catch (err) {
+      console.error(err);
       setError("Could not copy result.");
     }
   };
@@ -146,6 +209,7 @@ function App() {
 
     const options = {
       margin: 0.5,
+
       filename: "ai-travel-plan.pdf",
 
       image: {
@@ -175,22 +239,30 @@ function App() {
         .set(options)
         .from(pdfContentRef.current)
         .save();
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       setError("Could not download PDF.");
     } finally {
       setDownloading(false);
     }
   };
 
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#fff8ee] text-[#1b1f3b]">
       <Background />
 
       <main className="mx-auto w-[calc(100%-32px)] max-w-[1120px] py-14 md:py-20">
+        {/* Hero */}
         <Hero />
 
+        {/* Features */}
         <Features />
 
+        {/* Planner */}
         <Planner
           userInput={userInput}
           setUserInput={setUserInput}
@@ -199,6 +271,7 @@ function App() {
           loading={loading}
         />
 
+        {/* Result */}
         {answer && (
           <Result
             ref={resultSectionRef}
@@ -212,6 +285,7 @@ function App() {
           />
         )}
 
+        {/* Error */}
         {error && (
           <section className="mt-[22px] animate-shake rounded-[18px] border-2 border-[#ff6b6b] bg-[#fff0f0] px-5 py-[18px] leading-6 text-[#b42318]">
             {error}
@@ -219,8 +293,10 @@ function App() {
         )}
       </main>
 
+      {/* Footer */}
       <footer className="px-4 pb-10 pt-[30px] text-center text-[0.92rem] text-[#5d6385]">
-        Built with FastAPI, LangGraph, Groq, PostgreSQL, Tavily and AviationStack
+        Built with FastAPI, LangGraph, Groq, PostgreSQL, Tavily and
+        AviationStack
       </footer>
     </div>
   );
