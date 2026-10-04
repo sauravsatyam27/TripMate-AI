@@ -68,47 +68,37 @@ def health_check():
 
 @app.post("/api/travel")
 def travel_planner(request_data: TravelRequest):
-
-    print("\n" + "=" * 70)
-    print("TRIPMATE REQUEST START")
-    print("=" * 70)
+    print("\n" + "=" * 80)
+    print("🚀 TRIPMATE /api/travel REQUEST STARTED")
+    print("=" * 80, flush=True)
 
     try:
-
         user_message = request_data.message.strip()
 
-        print("MESSAGE:", user_message)
-        print("THREAD:", request_data.thread_id)
+        print("MESSAGE:", user_message, flush=True)
+        print("THREAD ID:", request_data.thread_id, flush=True)
 
         if not user_message:
             return JSONResponse(
                 status_code=400,
                 content={
                     "success": False,
-                    "error": "Message cannot be empty."
+                    "error": "Message cannot be empty"
                 }
             )
 
-        print("\nStarting run_travel_agent()...")
-
-        # =====================================================
-        # RUN AGENT
-        # =====================================================
+        print("🔥 Calling run_travel_agent()...", flush=True)
 
         result = run_travel_agent(
             user_input=user_message,
             thread_id=request_data.thread_id
         )
 
-        print("\nrun_travel_agent() completed successfully.")
+        print("✅ run_travel_agent() completed", flush=True)
+        print("RESULT TYPE:", type(result), flush=True)
+        print("RESULT:", result, flush=True)
 
-        print("RESULT TYPE:", type(result))
-
-        # =====================================================
-        # RESPONSE
-        # =====================================================
-
-        response_data = {
+        response = {
             "success": True,
             "thread_id": result.get("thread_id"),
             "answer": result.get("answer", ""),
@@ -119,37 +109,32 @@ def travel_planner(request_data: TravelRequest):
             "llm_calls": result.get("llm_calls", 0)
         }
 
-        print("Sending successful response.")
+        print("📦 Returning response...", flush=True)
 
-        return JSONResponse(
-            status_code=200,
-            content=response_data
-        )
+        return JSONResponse(content=response)
 
     except Exception as e:
 
-        print("\n" + "=" * 70)
-        print("TRIPMATE BACKEND ERROR")
-        print("=" * 70)
+        error_trace = traceback.format_exc()
 
-        print("ERROR TYPE:", type(e).__name__)
-        print("ERROR:", str(e))
+        print("\n" + "=" * 80)
+        print("❌ TRIPMATE BACKEND ERROR")
+        print("=" * 80)
+        print("ERROR TYPE:", type(e).__name__, flush=True)
+        print("ERROR:", str(e), flush=True)
+        print("TRACEBACK:")
+        print(error_trace, flush=True)
+        print("=" * 80, flush=True)
 
-        traceback.print_exc()
-
-        print("=" * 70)
-
-        # TEMPORARY DEBUG RESPONSE
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
                 "error_type": type(e).__name__,
                 "error": str(e),
-                "traceback": traceback.format_exc()
+                "traceback": error_trace
             }
         )
-
 
 # =========================================================
 # FAVICON
