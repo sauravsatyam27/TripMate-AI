@@ -3,6 +3,7 @@ import uvicorn
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.backend import run_travel_agent
@@ -20,6 +21,32 @@ app = FastAPI(
     title="TripMate AI",
     description="LangGraph Multi-Agent Travel Planner API",
     version="1.0.0"
+)
+
+
+# =========================================================
+# CORS
+# =========================================================
+
+app.add_middleware(
+    CORSMiddleware,
+
+    allow_origins=[
+        # Production Vercel frontend
+        "https://trip-mate-ai-woad.vercel.app",
+
+        # Vercel deployment URL
+        "https://trip-mate-ai-git-main-sauravsatyam27s-projects.vercel.app",
+
+        # Local React/Vite development
+        "http://localhost:5173",
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
 )
 
 
@@ -50,13 +77,17 @@ async def health_check():
 # =========================================================
 
 @app.post("/api/travel")
-async def travel_planner(
+def travel_planner(
     request_data: TravelRequest
 ):
 
     try:
 
         user_message = request_data.message.strip()
+
+        # ---------------------------------------------
+        # Validate message
+        # ---------------------------------------------
 
         if not user_message:
 
@@ -155,7 +186,7 @@ async def favicon():
 
 
 # =========================================================
-# RUN
+# RUN LOCAL
 # =========================================================
 
 if __name__ == "__main__":
